@@ -8,10 +8,11 @@ public class GameOfLife {
     /**
      * The <b>main</b> method of the app.
      * Creates an instance of the game's controller and starts the game.
+     *
      * @param args
      */
     public static void main( String[] args ) {
-        int size = 44;
+        int size = 49;
 
         GameController game = new GameController( size );
     }

@@ -1,27 +1,33 @@
+import javafx.scene.control.ComboBox;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.*;
 import java.util.LinkedList;
 import java.util.Iterator;
-import javax.swing.*;
-import java.io.*;
 import java.util.Random;
+import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
+import java.io.*;
 
 /**
  * The class <b>GameController</b> implements the interface ActionListener to be called
- * when a player selects a tile. It computes the next state for each successive generation,
- * updating the game's model and view.
+ * when a player selects a tile. It also implements the interface ChangeListener, called
+ * when the player adjusts the game speed via a JSlider. It computes the next state for each successive
+ * generation, updating the game's model and view.
  *
  * @author Igor Grebenkov
  */
-public class GameController implements ActionListener {
+public class GameController implements ActionListener, ChangeListener {
     private static final int DEFAULT_TIMER_DELAY = 300; // Default timer delay
 
-    private GameView gameView;        // Reference to the game's view
-    private GameModel gameModel;      // Reference to the game's model
-    private Timer timer;              // Timer to control speed of each generation/board update
-    private int numberOfGenerations;  // Counts the number of generations
+    private GameView gameView;            // Reference to the game's view
+    private GameModel gameModel;          // Reference to the game's model
+    private Timer timer;                  // Timer to control speed of each generation/board update
+    private int moveDelay;                // Timer delay between every generation (ms)
+    public Integer numberOfGenerations;   // Counts the number of generations
 
     /**
      * Constructor to initialize the controller. Creates the game's view and model instances.
@@ -31,7 +37,8 @@ public class GameController implements ActionListener {
     public GameController( int size ) {
         gameModel = new GameModel( size );
         gameView = new GameView( gameModel, this );
-        this.timer = new Timer( DEFAULT_TIMER_DELAY, this );
+        moveDelay = 200;
+        gameView.setJTextFieldString( Integer.toString( 0 ) );
         numberOfGenerations = 0;
         gameView.update();
     }
@@ -39,10 +46,11 @@ public class GameController implements ActionListener {
     /**
      * Resets the game.
      */
-    public void reset() {
+    private void reset() {
         gameModel.reset();
-        gameView.update();
         numberOfGenerations = 0;
+        gameView.setJTextFieldString( Integer.toString( numberOfGenerations ) );
+        gameView.update();
     }
 
     /**
@@ -51,41 +59,88 @@ public class GameController implements ActionListener {
      * @param e the ActionEvent
      */
     public void actionPerformed( ActionEvent e ) {
-        // If a tile on the grid is clicked, toggle it's status (active to inactive or vice-versa)
+        // - If a tile on the grid is clicked and a preset is active,
+        // the preset will be drawn around the next tile clicked by the user.
+        // - If no preset is active, clicking a tile toggles it's status
         if ( e.getSource() instanceof GridTile ) {
-
-            GridTile clicked = ( GridTile ) ( e.getSource() );
-
-            if ( gameModel.getCurrentStatus( clicked.getColumn(), clicked.getRow() ) ==
+            GridTile source = ( GridTile ) ( e.getSource() );
+            // If the preset is selected in the ComboBox, draw that preset
+                if ( !gameView.getComboBoxString().equals( "" ) ) {
+                Preset p = new Preset( source.getColumn(), source.getRow(), gameModel, gameView );
+                switch ( gameView.getComboBoxString() ) {
+                    case "Glider":
+                        p.drawGlider();
+                        break;
+                    case "Small Exploder":
+                        p.drawSmallExploder();
+                        break;
+                    case "Exploder":
+                        p.drawExploder();
+                        break;
+                    case "10 Cell Row":
+                        p.drawTenCellRow();
+                        break;
+                    case "Lightweight Spaceship":
+                        p.drawLightweightSpaceship();
+                        break;
+                    case "Tumbler":
+                        p.drawTumbler();
+                        break;
+                    case "Gosper Glider Gun":
+                        p.drawGosperGliderGun();
+                        break;
+                }
+            } else if ( gameModel.getCurrentStatus( source.getColumn(), source.getRow() ) ==
                     GameModel.INACTIVE ) {
-                gameModel.selectTile( clicked.getColumn(), clicked.getRow() );
+                gameModel.selectTile( source.getColumn(), source.getRow() );
                 gameView.update();
             } else {
-                gameModel.unselectTile( clicked.getColumn(), clicked.getRow() );
+                gameModel.unselectTile( source.getColumn(), source.getRow() );
                 gameView.update();
             }
         }
 
+        // Event handling for control buttons
         if ( e.getSource() instanceof JButton ) {
-            JButton clicked = ( JButton ) ( e.getSource() );
+            JButton source = ( JButton ) ( e.getSource() );
 
-            if ( clicked.getText().equals( "Start" ) ) {
+            if ( source.getText().equals( "Start" ) ) {
                 runSimulation();
-            } else if ( clicked.getText().equals( "Stop" ) ) {
-                timer.stop();
-            } else if ( clicked.getText().equals( "Random" ) ) {
+                gameView.disableStartButton();
+                gameView.enableStopButton();
+            } else if ( source.getText().equals( "Stop" ) ) {
+                timer.cancel();
+                timer.purge();
+                gameView.enableStartButton();
+                gameView.disableStopButton();
+            } else if ( source.getText().equals( "Next" ) ) {
+                oneGeneration();
+            } else if ( source.getText().equals( "Random" ) ) {
                 randomizeTiles();
-            } else if ( clicked.getText().equals( "Speed +" ) ) {
-            } else if ( clicked.getText().equals( "Reset" ) ) {
+            } else if ( source.getText().equals( "Reset" ) ) {
+                if ( numberOfGenerations != 0 ) {
+                    timer.cancel();
+                    timer.purge();
+                }
+                gameView.enableStartButton();
+                gameView.disableStopButton();
                 reset();
-                timer.stop();
-            } else if ( clicked.getText().equals( "Quit" ) ) {
+            } else if ( source.getText().equals( "Quit" ) ) {
                 System.exit( 0 );
             }
         }
+    }
 
-        if ( e.getSource() instanceof Timer ) {
-            oneGeneration();
+    /**
+     * Change listener for JSliders
+     *
+     * @param e the ChangeEvent
+     */
+    public void stateChanged( ChangeEvent e ) {
+        JSlider source = ( JSlider ) e.getSource();
+
+        if ( !source.getValueIsAdjusting() ) {
+            moveDelay = source.getValue();
         }
     }
 
@@ -93,7 +148,8 @@ public class GameController implements ActionListener {
      * Begins the simulation
      */
     private void runSimulation() {
-        timer.start();
+        timer = new Timer();
+        timer.schedule( new Task(), moveDelay );
     }
 
     /**
@@ -103,7 +159,7 @@ public class GameController implements ActionListener {
         // Get the status of each tile in the next generation of the game
         int[][] statusCache = cacheNextGenStatuses();
 
-        // Select/unselect tiles according to cached positions
+        // Select/unselect tiles according to previously cached positions
         for ( int i = 0; i < gameModel.getSize(); i++ ) {
             for ( int j = 0; j < gameModel.getSize(); j++ ) {
                 if ( statusCache[ i ][ j ] == 0 ) {
@@ -113,8 +169,9 @@ public class GameController implements ActionListener {
                 }
             }
         }
-
         numberOfGenerations++;
+        gameView.setJTextFieldString( Integer.toString( numberOfGenerations ) );
+
         gameView.update();
     }
 
@@ -148,7 +205,7 @@ public class GameController implements ActionListener {
                     }
                 }
 
-                // Mark tiles for selection or deselection according to the game's rules
+                // Mark tiles for life or death according to the game's rules
                 if ( gameModel.getCurrentStatus( i, j ) == 1 ) {
                     if ( numValidNeighbours <= 1 ||
                             numValidNeighbours >= 4 ) {
@@ -204,18 +261,17 @@ public class GameController implements ActionListener {
                 i.remove();
             }
         }
-
         return neighbours;
     }
 
     /**
-     * Randomly activates a certain number in tiles with a 1/16 probability
+     * Randomly activates some tiles with a 1/31 probability
      */
     private void randomizeTiles() {
         Random n = new Random();
         for ( int i = 0; i < gameModel.getSize(); i++ ) {
             for ( int j = 0; j < gameModel.getSize(); j++ ) {
-                int newStatus = n.nextInt( 15 );
+                int newStatus = n.nextInt( 30 );
 
                 if ( newStatus == 0 ) {
                     gameModel.selectTile( i, j );
@@ -225,5 +281,19 @@ public class GameController implements ActionListener {
         gameView.update();
     }
 
-}
+    /**
+     * The nested class <b>Task</b> is used to schedule tasks
+     * (in this program, running each generation of the simulation).
+     */
+    private class Task extends TimerTask {
+        /**
+         * Runs a task -> repeatedly executes one generation of the game
+         */
+        public void run() {
+            oneGeneration();
+            timer.schedule( new Task(), moveDelay );
+        }
+    }
 
+
+}

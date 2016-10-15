@@ -1,6 +1,5 @@
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.BorderFactory;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 
@@ -17,7 +16,6 @@ import java.awt.*;
  * @author Igor Grebenkov
  */
 public class GridTile extends JButton {
-
 
     private static final int NUM_COLOURS = 2;    // Number of colours
     private int type;                            // Tile type -> active or inactive
@@ -38,37 +36,30 @@ public class GridTile extends JButton {
         this.column = column;
         this.type = type;
 
+        // JButton properties
         setBackground( Color.WHITE );
+        setPreferredSize( new Dimension( 15, 15 ) );
+        setMargin( new Insets( 0, 0, 0, 0 ) );
+        setContentAreaFilled( false );
+        setFocusPainted( false );
+        setBorder( new EmptyBorder( 0, 0, 0, 0 ) );
 
         // Fetch image icon
         setIcon( getImageIcon() );
-
-        this.setMargin(new Insets(0,0,0,0));
-        this.setContentAreaFilled(false);
-        this.setFocusPainted(false);
-        this.setBorder(new EmptyBorder(0,0,0,0));
-
-        // Create empty border for each tile
-        //Border emptyBorder = BorderFactory.createEmptyBorder( 0, 0, 0, 0 );
-        //setBorder( emptyBorder );
-        //setBorderPainted( false );
     }
 
     /**
-     * Determines which image to used based on tile type and returns an icon of that type.
+     * Determines which image to use based on tile type and returns an icon of that type.
      *
      * @return the image to display on the tile
      */
     private ImageIcon getImageIcon() {
         if ( icons[ type ] == null ) {
-            // String strId = (Integer) Integer.toString( type );
-
             if ( type == 0 ) {
-                icons[type] = new ImageIcon( getClass().getResource("data/tile-0.jpg"));
+                icons[ type ] = new ImageIcon( getClass().getResource( "data/tile-0.jpg" ) );
             } else {
-                icons[type] = new ImageIcon( getClass().getResource("data/tile-1.jpg"));
+                icons[ type ] = new ImageIcon( getClass().getResource( "data/tile-1.jpg" ) );
             }
-            // icons[ type ] = new ImageIcon( "src/data/tile-" + strId + ".jpg" );
         }
         return icons[ type ];
     }

@@ -13,7 +13,7 @@ public class GameModel {
     public static final int ACTIVE = 1;    // Captures the state of an active dot
     private int sizeOfGrid;                // The size of the grid
     private int[][] tileStates;            // The state of each tile
-    private int numberOfGenerations;       // The number of generations since starting the simulation
+    private int numberOfGenerations;       // The number of generations since starting the simulation.3
 
     /**
      * Constructor to initialize the model to a given size of grid.
@@ -23,7 +23,6 @@ public class GameModel {
     public GameModel( int size ) {
         numberOfGenerations = 0;
         sizeOfGrid = size;
-
         reset();
     }
 
@@ -38,12 +37,12 @@ public class GameModel {
                 tileStates[ i ][ j ] = INACTIVE;
             }
         }
-
         numberOfGenerations = 0;
     }
 
     /**
      * Getter method for the size of the grid.
+     *
      * @return the size of the grid
      */
     public int getSize() {
@@ -52,6 +51,7 @@ public class GameModel {
 
     /**
      * Getter method to return the number of generations since starting the simulation.
+     *
      * @return number of generations since starting the simulation
      */
     public int getNumberOfGenerations() {
@@ -60,6 +60,7 @@ public class GameModel {
 
     /**
      * Getter method to return the game's model.
+     *
      * @return the game model
      */
     public int[][] getTileStates() {
@@ -68,24 +69,32 @@ public class GameModel {
 
     /**
      * Getter method to return the status of a title
+     *
      * @param i the tile's x co-ordinate
      * @param j the tile's y co-ordinate
      * @return the status (active or inactive) of the tile at (i,j)
      */
-    public int getCurrentStatus(int i, int j) {
-        return tileStates[i][j];
+    public int getCurrentStatus( int i, int j ) {
+        return tileStates[ i ][ j ];
     }
 
     /**
      * Method that selects a tile and makes it active.
+     *
      * @param i the tile's x co-ordinate
      * @param j the tile's y co-ordinate
      */
-    public void selectTile(int i, int j) {
-        tileStates[i][j] = ACTIVE;
+    public void selectTile( int i, int j ) {
+        tileStates[ i ][ j ] = ACTIVE;
     }
 
+    /**
+     * Method that unSelects a tile and makes it inactive.
+     *
+     * @param i the tile's x co-ordinate
+     * @param j the tile's y co-ordinate
+     */
     public void unselectTile( int i, int j ) {
-        tileStates[i][j] = INACTIVE;
+        tileStates[ i ][ j ] = INACTIVE;
     }
 }
