@@ -112,7 +112,7 @@ public class GameView extends JFrame {
         // JLabel for number of generations text field
         JLabel numOfGenerationsLabel = new JLabel( "Generations: " );
         numOfGenerationsLabel.setForeground( Color.WHITE );
-        numOfGenerationsLabel.setFont( new Font( "Helvetica", Font.PLAIN, 16 ) );
+        //numOfGenerationsLabel.setFont( new Font( "Helvetica", Font.PLAIN, 16 ) );
 
         // Add the control buttons to a JPanel
         JPanel control = new JPanel();
